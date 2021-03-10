@@ -12,6 +12,7 @@ class ClientThread(Thread):
         print("[+] New server socket thread started for " + address[0] + ":" + str(address[1]))
 
     def run(self):
+        global numReady
         conn = self.connection
 
         # Client confirmation
@@ -42,11 +43,13 @@ class ClientThread(Thread):
         f_read = file.read(BUFFER_SIZE)
         t0 = time.time()  # Start timer
         while len(f_read) > 0:
-            sent = conn.send(f_read)
+            print(f_read)
+            sent = conn.send(f_read.encode())
             total_sent += sent
             chunks += 1
             hash_fn.update(f_read)
             f_read = file.read(BUFFER_SIZE)
+        t1 = time.time()  # End timer
         conn.send(FILE_END.encode())
 
         conn.send((HASH + SEP + hash_fn).encode())
@@ -67,12 +70,11 @@ OK = 'OK'
 ERROR = 'ERROR'
 
 # Server options
-DIRECTORY = 'file'
-numClients = 5  # should be asked
-fileName = 'archivo'  # should be asked
+DIRECTORY = 'Files'
+numClients = 1  # should be asked
+fileName = 'Prueba.txt'  # should be asked
 
 # Sync shared variables
-global numReady
 numReady = 0
 numReadyLock = Lock()
 
