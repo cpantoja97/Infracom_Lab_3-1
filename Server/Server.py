@@ -17,6 +17,7 @@ class ClientThread(Thread):
 
         # Client confirmation
         conn.send(READY.encode())
+        time.sleep(0.1)
         cli = conn.recv(BUFFER_SIZE).decode()
 
         if cli != READY:
@@ -37,9 +38,11 @@ class ClientThread(Thread):
         chunks = 0
 
         conn.send((FILE_NAME + SEP + fileName).encode())
+        time.sleep(0.1)
 
         # SEND FILE...
         conn.send(FILE_INIT.encode())
+        time.sleep(0.1)
         f_read = file.read(BUFFER_SIZE)
         t0 = time.time()  # Start timer
         while len(f_read) > 0:
@@ -47,12 +50,16 @@ class ClientThread(Thread):
             sent = conn.send(f_read.encode())
             total_sent += sent
             chunks += 1
-            hash_fn.update(f_read)
+            hash_fn.update(f_read.encode())
             f_read = file.read(BUFFER_SIZE)
         t1 = time.time()  # End timer
-        conn.send(FILE_END.encode())
+        time.sleep(0.1)
 
-        conn.send((HASH + SEP + hash_fn).encode())
+        conn.send(FILE_END.encode())
+        time.sleep(0.1)
+
+        conn.send((HASH + SEP + hash_fn.hexdigest()).encode())
+        time.sleep(0.1)
 
         # Client confirmation (OK | ERROR)
         conn.recv(BUFFER_SIZE).decode()
