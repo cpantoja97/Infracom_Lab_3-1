@@ -125,3 +125,5 @@ dmypy.json
 .pyre/
 .idea/workspace.xml
 .DS_Store
+Files/Prueba.txt
+ArchivosRecibidos/Prueba.txt
