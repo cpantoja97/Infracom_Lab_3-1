@@ -11,7 +11,7 @@ data = clientSocket.recv(4096)
 
 ready = 'READY'.encode()
 if data == ready:
-    socket.send(ready)
+    clientSocket.send(ready)
 
     data = clientSocket.recv(4096)
     data = data.decode().split(':')
@@ -39,12 +39,12 @@ if data == ready:
 
                 hashFile = hasher.hexdigest()
                 if hashFile == hashData:
-                    clientSocket.send('OK')
+                    clientSocket.send('OK'.encode())
                     print(f'Bytes recibidos: {bytesRecibidos}')
                     print('Descarga Exitosa')
                 else:
                     print(f'Hash recibido del servidor: {hashData} \n Hash calculado del archivo: {hashFile}')
-                    clientSocket.send('ERROR')
+                    clientSocket.send('ERROR'.encode())
             else:
                 print(f'ERROR: se recibio {data[0]} y se esperaba "HASH"')
         else:
