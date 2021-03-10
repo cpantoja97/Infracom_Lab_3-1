@@ -3,12 +3,16 @@ from threading import Thread
 from threading import Lock
 import hashlib
 import time
+from Server.ServerView import select
 
 
 class ClientThread(Thread):
-    def __init__(self, connection, address, ):
+    def __init__(self, connection, address, fileSelect, fileSize):
         Thread.__init__(self)
         self.connection = connection
+        self.address = address
+        self.fileSelect = fileSelect
+        self.fileSize = fileSize
         print("[+] New server socket thread started for " + address[0] + ":" + str(address[1]))
 
     def run(self):
@@ -29,15 +33,15 @@ class ClientThread(Thread):
         numReadyLock.release()
 
         # Actively wait until all clients are ready
-        while numReady < numClients:
+        while numReady < clients:
             continue
 
         hash_fn = hashlib.sha256()
-        file = open('./' + DIRECTORY + '/' + fileName)
+        file = open('./' + DIRECTORY + '/' + fileSelect)
         total_sent = 0
         chunks = 0
 
-        conn.send((FILE_NAME + SEP + fileName).encode())
+        conn.send((FILE_NAME + SEP + fileSelect).encode())
         time.sleep(0.1)
 
         # SEND FILE...
@@ -60,7 +64,7 @@ class ClientThread(Thread):
 
         conn.send((HASH + SEP + hash_fn.hexdigest()).encode())
         time.sleep(0.1)
-
+        
         # Client confirmation (OK | ERROR)
         conn.recv(BUFFER_SIZE).decode()
         conn.close()
@@ -78,8 +82,9 @@ ERROR = 'ERROR'
 
 # Server options
 DIRECTORY = 'Files'
-numClients = 1  # should be asked
-fileName = 'Prueba.txt'  # should be asked
+#numClients = 1  # should be asked
+#fileName = 'Prueba.txt'  # should be asked
+
 
 # Sync shared variables
 numReady = 0
@@ -95,16 +100,45 @@ serverSocket.bind(('', SERVER_PORT))
 
 threads = []
 
+# Corre el metodo del view para obtener los datos
+clients, fileSelect, fileSize = select()
 while True:
     serverSocket.listen(25)
     print('The server is ready to receive')
 
     connectionSocket, address = serverSocket.accept()
 
-    newThread = ClientThread(connectionSocket, address)
+    newThread = ClientThread(connectionSocket, address, fileSelect, fileSize)
     newThread.start()
 
     threads.append(newThread)
 
 for t in threads:
     t.join()
+
+
+# Creacion log
+
+def format_logname(now):
+    dt_string = now.strftime("%Y-%m-%d-%H-%M-%S")
+    logname = dt_string + "-log.txt"
+    return logname
+
+def log(addr, now, exitosa, tiempoTotal, fileSelect, fileSize, enviados, bytesEnv, recibidos, bytesRec):
+    # Crear file de log
+    formatname = format_logname(now)
+    f = open("Logs/" + formatname, "x")
+    # Nombre y tamano enviado
+    f.write("El nombre del archivo enviado es " + fileSelect + " y su tamaño es " + fileSize + "MB \n")
+    # Cliente
+    f.write("El cliente al que se realiza la transferencia es " + str(addr) + "\n")
+    # Info transferencia
+    estado = "exitosa" if exitosa else "no exitosa"
+    f.write("La entrega del archivo fue " + estado + "\n")
+    f.write("El tiempo total de transferencia, en segundos, fue " + str(tiempoTotal) + "\n")
+    f.write("El numero de paquetes enviados es " + enviados + "\n")
+    f.write("El valor total en bytes enviado es " + bytesEnv + "\n")
+    f.write("El numero de paquetes recibidos es " + recibidos + "\n")
+    f.write("El valor total en bytes reciibido es " + bytesRec + "\n")
+    f.close()
+    return formatname
