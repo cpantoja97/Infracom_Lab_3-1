@@ -2,8 +2,6 @@ from socket import *
 import hashlib
 from boltons import socketutils
 
-DELIMITER = ';'
-
 
 def receive(clientSocket):
     return clientSocket.read_ns().decode()

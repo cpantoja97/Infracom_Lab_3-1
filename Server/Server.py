@@ -80,7 +80,6 @@ FILE_END = 'FILE_END'
 HASH = 'HASH'
 OK = 'OK'
 ERROR = 'ERROR'
-DELIMITER = ';'
 
 # Server options
 DIRECTORY = 'Files'
