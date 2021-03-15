@@ -9,23 +9,22 @@ import time
 class ClientThread(Thread):
     def __init__(self, connection, address):
         Thread.__init__(self)
-        self.connection = socketutils.BufferedSocket(connection)
+        self.socket = connection
+        self.ns_socket = socketutils.NetstringSocket(connection)
         print("[+] New server socket thread started for " + address[0] + ":" + str(address[1]))
 
     def send_message(self, message):
-        encoded_message = (message + DELIMITER).encode()
-        self.connection.send(encoded_message)
+        self.ns_socket.write_ns(message.encode())
 
     def send_file(self, chunk):
-        encoded_message = chunk + DELIMITER.encode()
-        return self.connection.send(encoded_message)
+        self.ns_socket.write_ns(chunk)
 
     def receive_message(self):
-        return self.connection.recv_until(DELIMITER.encode()).decode()
+        return self.ns_socket.read_ns().decode()
 
     def run(self):
         global numReady
-        conn = self.connection
+        conn = self.ns_socket
 
         # Client confirmation
         self.send_message(READY)
@@ -55,9 +54,8 @@ class ClientThread(Thread):
         f_read = file.read(BUFFER_SIZE)
         t0 = time.time()  # Start timer
         while len(f_read) > 0:
-            print(f_read)
-            sent = self.send_file(f_read)
-            total_sent += sent
+            self.send_file(f_read)
+            # total_sent += sent
             chunks += 1
             hash_fn.update(f_read)
             f_read = file.read(BUFFER_SIZE)
@@ -70,7 +68,7 @@ class ClientThread(Thread):
         cli = self.receive_message()
         print(cli)
         print("Socket will close")
-        conn.close()
+        self.socket.close()
 
 
 # PROTOCOL COMMANDS IN CASE THEY ARE CHANGED
