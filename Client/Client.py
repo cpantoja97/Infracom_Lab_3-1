@@ -9,6 +9,10 @@ def receive(clientSocket):
     return clientSocket.recv_until(DELIMITER.encode()).decode()
 
 
+def receive_file(clientSocket):
+    return clientSocket.recv_until(DELIMITER.encode())
+
+
 def send(clientSocket, message):
     encoded_message = (message + DELIMITER).encode()
     clientSocket.send(encoded_message)
@@ -39,12 +43,12 @@ if data == ready:
             bytesRecibidos = 0
             with open(f'./ArchivosRecibidos/{fileName}', 'wb') as fileSend:
                 i = 0
-                data = receive(clientSocket)
-                while data and data != 'FILE_END':
+                data = receive_file(clientSocket)
+                while data and data != 'FILE_END'.encode():
                     bytesRecibidos += len(data)
                     hasher.update(data)
                     fileSend.write(data)
-                    data = receive(clientSocket)
+                    data = receive_file(clientSocket)
                     i += 1
 
             data = receive(clientSocket).split(':')
