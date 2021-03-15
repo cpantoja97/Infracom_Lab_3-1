@@ -16,6 +16,10 @@ class ClientThread(Thread):
         encoded_message = (message + DELIMITER).encode()
         self.connection.send(encoded_message)
 
+    def send_file(self, chunk):
+        encoded_message = chunk + DELIMITER.encode()
+        return self.connection.send(encoded_message)
+
     def receive_message(self):
         return self.connection.recv_until(DELIMITER.encode()).decode()
 
@@ -40,7 +44,7 @@ class ClientThread(Thread):
             continue
 
         hash_fn = hashlib.sha256()
-        file = open('./' + DIRECTORY + '/' + fileName)
+        file = open('./' + DIRECTORY + '/' + fileName, "rb")
         total_sent = 0
         chunks = 0
 
@@ -52,10 +56,10 @@ class ClientThread(Thread):
         t0 = time.time()  # Start timer
         while len(f_read) > 0:
             print(f_read)
-            sent = conn.send(f_read.encode())
+            sent = self.send_file(f_read)
             total_sent += sent
             chunks += 1
-            hash_fn.update(f_read.encode())
+            hash_fn.update(f_read)
             f_read = file.read(BUFFER_SIZE)
         t1 = time.time()  # End timer
         self.send_message(FILE_END)
@@ -63,7 +67,9 @@ class ClientThread(Thread):
         self.send_message(HASH + SEP + hash_fn.hexdigest())
 
         # Client confirmation (OK | ERROR)
-        self.receive_message()
+        cli = self.receive_message()
+        print(cli)
+        print("Socket will close")
         conn.close()
 
 
@@ -81,7 +87,7 @@ DELIMITER = ';'
 # Server options
 DIRECTORY = 'Files'
 numClients = 1  # should be asked
-fileName = 'Prueba.txt'  # should be asked
+fileName = 'IMG_3051.JPG'  # should be asked
 
 # Sync shared variables
 numReady = 0
