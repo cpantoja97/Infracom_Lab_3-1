@@ -1,23 +1,34 @@
 from socket import *
 from threading import Thread
 from threading import Lock
+from boltons import socketutils
 import hashlib
 import time
 
 
 class ClientThread(Thread):
-    def __init__(self, connection, address, ):
+    def __init__(self, connection, address):
         Thread.__init__(self)
-        self.connection = connection
+        self.socket = connection
+        self.ns_socket = socketutils.NetstringSocket(connection)
         print("[+] New server socket thread started for " + address[0] + ":" + str(address[1]))
+
+    def send_message(self, message):
+        self.ns_socket.write_ns(message.encode())
+
+    def send_file(self, chunk):
+        self.ns_socket.write_ns(chunk)
+
+    def receive_message(self):
+        return self.ns_socket.read_ns().decode()
 
     def run(self):
         global numReady
-        conn = self.connection
+        conn = self.ns_socket
 
         # Client confirmation
-        conn.send(READY.encode())
-        cli = conn.recv(BUFFER_SIZE).decode()
+        self.send_message(READY)
+        cli = self.receive_message()
 
         if cli != READY:
             raise
@@ -32,31 +43,32 @@ class ClientThread(Thread):
             continue
 
         hash_fn = hashlib.sha256()
-        file = open('./' + DIRECTORY + '/' + fileName)
+        file = open('./' + DIRECTORY + '/' + fileName, "rb")
         total_sent = 0
         chunks = 0
 
-        conn.send((FILE_NAME + SEP + fileName).encode())
+        self.send_message(FILE_NAME + SEP + fileName)
 
         # SEND FILE...
-        conn.send(FILE_INIT.encode())
+        self.send_message(FILE_INIT)
         f_read = file.read(BUFFER_SIZE)
         t0 = time.time()  # Start timer
         while len(f_read) > 0:
-            print(f_read)
-            sent = conn.send(f_read.encode())
-            total_sent += sent
+            self.send_file(f_read)
+            # total_sent += sent
             chunks += 1
-            hash_fn.update(f_read.encode())
+            hash_fn.update(f_read)
             f_read = file.read(BUFFER_SIZE)
         t1 = time.time()  # End timer
-        conn.send(FILE_END.encode())
+        self.send_message(FILE_END)
 
-        conn.send((HASH + SEP + hash_fn.hexdigest()).encode())
+        self.send_message(HASH + SEP + hash_fn.hexdigest())
 
         # Client confirmation (OK | ERROR)
-        conn.recv(BUFFER_SIZE).decode()
-        conn.close()
+        cli = self.receive_message()
+        print(cli)
+        print("Socket will close")
+        self.socket.close()
 
 
 # PROTOCOL COMMANDS IN CASE THEY ARE CHANGED
@@ -72,7 +84,7 @@ ERROR = 'ERROR'
 # Server options
 DIRECTORY = 'Files'
 numClients = 1  # should be asked
-fileName = 'Prueba.txt'  # should be asked
+fileName = 'IMG_3051.JPG'  # should be asked
 
 # Sync shared variables
 numReady = 0
