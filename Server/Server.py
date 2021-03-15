@@ -47,12 +47,12 @@ class ClientThread(Thread):
             sent = conn.send(f_read.encode())
             total_sent += sent
             chunks += 1
-            hash_fn.update(f_read)
+            hash_fn.update(f_read.encode())
             f_read = file.read(BUFFER_SIZE)
         t1 = time.time()  # End timer
         conn.send(FILE_END.encode())
 
-        conn.send((HASH + SEP + hash_fn).encode())
+        conn.send((HASH + SEP + hash_fn.hexdigest()).encode())
 
         # Client confirmation (OK | ERROR)
         conn.recv(BUFFER_SIZE).decode()
