@@ -1,23 +1,31 @@
 from socket import *
 from threading import Thread
 from threading import Lock
+from boltons import socketutils
 import hashlib
 import time
 
 
 class ClientThread(Thread):
-    def __init__(self, connection, address, ):
+    def __init__(self, connection, address):
         Thread.__init__(self)
-        self.connection = connection
+        self.connection = socketutils.BufferedSocket(connection)
         print("[+] New server socket thread started for " + address[0] + ":" + str(address[1]))
+
+    def send_message(self, message):
+        encoded_message = (message + DELIMITER).encode()
+        self.connection(encoded_message)
+
+    def receive_message(self):
+        return self.connection.recv_until(DELIMITER).decode()
 
     def run(self):
         global numReady
         conn = self.connection
 
         # Client confirmation
-        conn.send(READY.encode())
-        cli = conn.recv(BUFFER_SIZE).decode()
+        self.send_message(READY)
+        cli = self.receive_message()
 
         if cli != READY:
             raise
@@ -36,10 +44,10 @@ class ClientThread(Thread):
         total_sent = 0
         chunks = 0
 
-        conn.send((FILE_NAME + SEP + fileName).encode())
+        self.send_message(FILE_NAME + SEP + fileName)
 
         # SEND FILE...
-        conn.send(FILE_INIT.encode())
+        self.send_message(FILE_INIT)
         f_read = file.read(BUFFER_SIZE)
         t0 = time.time()  # Start timer
         while len(f_read) > 0:
@@ -50,12 +58,12 @@ class ClientThread(Thread):
             hash_fn.update(f_read.encode())
             f_read = file.read(BUFFER_SIZE)
         t1 = time.time()  # End timer
-        conn.send(FILE_END.encode())
+        self.send_message(FILE_END)
 
-        conn.send((HASH + SEP + hash_fn.hexdigest()).encode())
+        self.send_message(HASH + SEP + hash_fn.hexdigest())
 
         # Client confirmation (OK | ERROR)
-        conn.recv(BUFFER_SIZE).decode()
+        self.receive_message()
         conn.close()
 
 
@@ -68,6 +76,7 @@ FILE_END = 'FILE_END'
 HASH = 'HASH'
 OK = 'OK'
 ERROR = 'ERROR'
+DELIMITER = ';'
 
 # Server options
 DIRECTORY = 'Files'
