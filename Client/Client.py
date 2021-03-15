@@ -2,7 +2,7 @@ from socket import *
 import hashlib
 from boltons import socketutils
 
-DELIMETER = ';'
+DELIMETER = ';'.encode()
 serverName = 'localhost'  # TBD IP de la maquina
 serverPort = 12000
 clientSocket = socket(AF_INET, SOCK_STREAM)
@@ -29,8 +29,8 @@ if data == ready:
             with open(f'./ArchivosRecibidos/{fileName}', 'wb') as fileSend:
                 i = 0
                 data = clientSocket.recv_until(delimiter=DELIMETER)
-                bytesRecibidos += len(data)
                 while data and data != 'FILE_END'.encode():
+                    bytesRecibidos += len(data)
                     hasher.update(data)
                     fileSend.write(data)
                     data = clientSocket.recv_until(delimiter=DELIMETER)
