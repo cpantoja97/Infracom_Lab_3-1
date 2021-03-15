@@ -14,10 +14,10 @@ class ClientThread(Thread):
 
     def send_message(self, message):
         encoded_message = (message + DELIMITER).encode()
-        self.connection(encoded_message)
+        self.connection.send(encoded_message)
 
     def receive_message(self):
-        return self.connection.recv_until(DELIMITER).decode()
+        return self.connection.recv_until(DELIMITER.encode()).decode()
 
     def run(self):
         global numReady
