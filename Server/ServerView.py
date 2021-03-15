@@ -24,7 +24,7 @@ def select():
            print("2- Archivo de 250 MB")
            numFile = int(input())
            if numFile == 1:
-               fileSelect = "archivo1.pdf" # Verificar nombre archivo
+               fileSelect = "IMG_3051.JPG" # Verificar nombre archivo
                fileSize = "100"
                ready = True
            elif numFile == 2:
