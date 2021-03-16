@@ -63,6 +63,8 @@ if data == ready:
                     send(ns_socket, 'ERROR')
             else:
                 print(f'ERROR: se recibio {data[0]} y se esperaba "HASH"')
+
+            send(ns_socket, str(bytesRecibidos) + ":" + str(i))
         else:
             recibido = data.decode()
             print(f'ERROR: se recibio {recibido} y se esperaba "FILE_INIT"')
