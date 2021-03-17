@@ -63,7 +63,7 @@ class ClientThread(Thread):
 
         # Send file info
         self.send_message(FILE_NAME + SEP + fileSelect)
-        self.send_message(FILE_SIZE + SEP + fileSize)
+        self.send_message(FILE_SIZE + SEP + str(fileSize))
 
         # SEND FILE...
         self.send_message(FILE_INIT)
@@ -103,7 +103,7 @@ class ClientThread(Thread):
 # Escritura del log
 def log(client_id, addr, now, exitosa, tiempoTotal, fileSelect, fileSize, enviados, bytesEnv, recibidos, bytesRec):
     # Crear file de log
-    formatname = "Cliente" + client_id + "-" + now.strftime("%Y-%m-%d-%H-%M-%S")
+    formatname = "Cliente" + str(client_id) + "-" + now.strftime("%Y-%m-%d-%H-%M-%S")
     pathlib.Path('./LogsServer').mkdir(exist_ok=True)
     f = open("./LogsServer/" + formatname, "x")
     # Nombre y tamano enviado
