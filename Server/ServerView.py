@@ -35,7 +35,7 @@ def select():
             else:
                 print("Numero invalido, digite nuevamente")
             if numFile > 0 and numFile < 3:
-                print("Se esperan " + str(clients) + " clientes a los que se les va a enviar " + fileSelect + " MB")
+                print("Se esperan " + str(clients) + " clientes a los que se les va a enviar " + fileSelect + ".")
 
     else:
         end = True
