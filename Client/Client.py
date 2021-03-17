@@ -16,7 +16,7 @@ def send(clientSocket, message):
     clientSocket.write_ns(encoded_message)
 
 
-serverName = 'localhost'  # TBD IP de la maquina
+serverName = '192.168.226.128'  # TBD IP de la maquina
 serverPort = 12000
 clientSocket = socket(AF_INET, SOCK_STREAM)
 clientSocket.connect((serverName, serverPort))
