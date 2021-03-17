@@ -6,35 +6,36 @@ import hashlib
 import time
 import datetime
 import pathlib
-
 from ServerView import select
 
 
+# Manage each Client connection
 class ClientThread(Thread):
-    def __init__(self, connection, address, fileSelect, fileSize):
+    def __init__(self, connection, address):
         Thread.__init__(self)
         self.address = address
-        self.fileSelect = fileSelect
-        self.fileSize = fileSize
         self.socket = connection
-        self.ns_socket = socketutils.NetstringSocket(connection)
+        self.ns_socket = socketutils.NetstringSocket(connection)  # Socket Wrapper to use Netstring wrapping technique
         print("[+] New server socket thread started for " + address[0] + ":" + str(address[1]))
 
+    # Send a message in text format
     def send_message(self, message):
         self.ns_socket.write_ns(message.encode())
 
+    # Send file in binary
     def send_file(self, chunk):
         self.ns_socket.write_ns(chunk)
 
+    # Receive message in text format
     def receive_message(self):
         return self.ns_socket.read_ns().decode()
 
+    # Print a message in console preceding with client identification
     def print_info(self, info):
         print("[" + self.address[0] + ":" + str(self.address[1]) + "] " + info)
 
     def run(self):
         global numReady
-        conn = self.ns_socket
 
         # Client confirmation
         self.send_message(READY)
@@ -46,7 +47,11 @@ class ClientThread(Thread):
         # Increase number of ready clients
         numReadyLock.acquire()
         numReady += 1
+        client_id = numReady
         numReadyLock.release()
+
+        # Inform client of his number and total clients
+        self.send_message(str(client_id) + SEP + str(clients))
 
         # Actively wait until all clients are ready
         while numReady < clients:
@@ -56,7 +61,9 @@ class ClientThread(Thread):
         bytes_sent = 0
         chunks_sent = 0
 
+        # Send file info
         self.send_message(FILE_NAME + SEP + fileSelect)
+        self.send_message(FILE_SIZE + SEP + fileSize)
 
         # SEND FILE...
         self.send_message(FILE_INIT)
@@ -72,6 +79,7 @@ class ClientThread(Thread):
         self.send_message(FILE_END)
         self.print_info("File transferred")
 
+        # Send Hash
         self.send_message(HASH + SEP + hash_fn.hexdigest())
 
         # Client confirmation (OK | ERROR)
@@ -84,22 +92,18 @@ class ClientThread(Thread):
         self.print_info("Client received " + str(bytes_received) + " bytes")
         self.print_info("Client received " + str(chunks_received) + " packets")
 
+        # Close socket
         self.socket.close()
 
-        log(self.address, datetime.datetime.now(), status == OK, t1 - t0, fileSelect, fileSize, chunks_sent, bytes_sent,
+        # Write log
+        log(client_id, self.address, datetime.datetime.now(), status == OK, t1 - t0, fileSelect, fileSize, chunks_sent, bytes_sent,
             chunks_received, bytes_received)
 
 
-# Creacion log
-def format_logname(now):
-    dt_string = now.strftime("%Y-%m-%d-%H-%M-%S")
-    logname = dt_string + "-log.txt"
-    return logname
-
-
-def log(addr, now, exitosa, tiempoTotal, fileSelect, fileSize, enviados, bytesEnv, recibidos, bytesRec):
+# Escritura del log
+def log(client_id, addr, now, exitosa, tiempoTotal, fileSelect, fileSize, enviados, bytesEnv, recibidos, bytesRec):
     # Crear file de log
-    formatname = format_logname(now)
+    formatname = "Cliente" + client_id + "-" + now.strftime("%Y-%m-%d-%H-%M-%S")
     pathlib.Path('./Logs').mkdir(exist_ok=True)
     f = open("./Logs/" + formatname, "x")
     # Nombre y tamano enviado
@@ -121,6 +125,7 @@ def log(addr, now, exitosa, tiempoTotal, fileSelect, fileSize, enviados, bytesEn
 # PROTOCOL COMMANDS IN CASE THEY ARE CHANGED
 READY = 'READY'
 FILE_NAME = 'FILE_NAME'
+FILE_SIZE = 'FILE_SIZE'
 SEP = ':'
 FILE_INIT = 'FILE_INIT'
 FILE_END = 'FILE_END'
