@@ -7,7 +7,7 @@ import time
 import datetime
 import pathlib
 
-from Server.ServerView import select
+from ServerView import select
 
 
 class ClientThread(Thread):
