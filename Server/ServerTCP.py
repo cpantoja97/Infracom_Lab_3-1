@@ -159,7 +159,7 @@ while True:
 
     connectionSocket, address = serverSocket.accept()
 
-    newThread = ClientThread(connectionSocket, address, fileSelect, fileSize)
+    newThread = ClientThread(connectionSocket, address)
     newThread.start()
 
     threads.append(newThread)
