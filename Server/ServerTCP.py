@@ -75,8 +75,8 @@ class ClientThread(Thread):
         self.send_message(HASH + SEP + hash_fn.hexdigest())
 
         # Client confirmation (OK | ERROR)
-        cli = self.receive_message()
-        self.print_info("Client status " + cli)
+        status = self.receive_message()
+        self.print_info("Client status " + status)
 
         # Client bytes and packets received
         cli = self.receive_message()
@@ -86,7 +86,7 @@ class ClientThread(Thread):
 
         self.socket.close()
 
-        log(self.address, datetime.datetime.now(), cli == OK, t1 - t0, fileSelect, fileSize, chunks_sent, bytes_sent,
+        log(self.address, datetime.datetime.now(), status == OK, t1 - t0, fileSelect, fileSize, chunks_sent, bytes_sent,
             chunks_received, bytes_received)
 
 
