@@ -104,8 +104,8 @@ class ClientThread(Thread):
 def log(client_id, addr, now, exitosa, tiempoTotal, fileSelect, fileSize, enviados, bytesEnv, recibidos, bytesRec):
     # Crear file de log
     formatname = "Cliente" + client_id + "-" + now.strftime("%Y-%m-%d-%H-%M-%S")
-    pathlib.Path('./Logs').mkdir(exist_ok=True)
-    f = open("./Logs/" + formatname, "x")
+    pathlib.Path('./LogsServer').mkdir(exist_ok=True)
+    f = open("./LogsServer/" + formatname, "x")
     # Nombre y tamano enviado
     f.write("El nombre del archivo enviado es " + fileSelect + " y su tamaño es " + str(fileSize) + " B \n")
     # Cliente
@@ -117,7 +117,7 @@ def log(client_id, addr, now, exitosa, tiempoTotal, fileSelect, fileSize, enviad
     f.write("El numero de paquetes enviados es " + str(enviados) + "\n")
     f.write("El valor total en bytes enviado es " + str(bytesEnv) + "\n")
     f.write("El numero de paquetes recibidos es " + str(recibidos) + "\n")
-    f.write("El valor total en bytes reciibido es " + str(bytesRec) + "\n")
+    f.write("El valor total en bytes recibido es " + str(bytesRec) + "\n")
     f.close()
     return formatname
 
@@ -135,9 +135,6 @@ ERROR = 'ERROR'
 
 # Server options
 DIRECTORY = 'Files'
-# numClients = 1  # should be asked
-# fileName = 'Prueba.txt'  # should be asked
-
 
 # Sync shared variables
 numReady = 0
