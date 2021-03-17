@@ -151,7 +151,7 @@ threads = []
 clients, fileSelect = select()
 fileSize = pathlib.Path('./' + DIRECTORY + '/' + fileSelect).stat().st_size
 
-while numReady < clients:
+while len(threads) < clients:
     serverSocket.listen(clients)
 
     connectionSocket, address = serverSocket.accept()
