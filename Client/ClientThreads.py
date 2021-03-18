@@ -130,7 +130,7 @@ def log(client_id, clients, now, exitosa, tiempoTotal, fileSelect, fileSize, env
 
         
 
-serverName = 'localhost' #'192.168.100.18'  # 'localhost' TBD IP de la maquina
+serverName =  '192.168.100.18'  # 'localhost' TBD IP de la maquina
 serverPort = 12000
 
 READY = 'READY'
