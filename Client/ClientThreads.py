@@ -113,7 +113,7 @@ class ClientThread(Thread):
 # Escritura del log
 def log(client_id, now, exitosa, tiempoTotal, fileSelect, fileSize, enviados, bytesEnv):
     # Crear file de log
-    formatname = "Cliente" + client_id + "-" + now.strftime("%Y-%m-%d-%H-%M-%S")
+    formatname = "Cliente" + client_id + "-" + now.strftime("%Y-%m-%d-%H-%M-%S") + "-log.txt"
     pathlib.Path('./LogsClient').mkdir(exist_ok=True)
     f = open("./LogsClient/" + formatname, "x")
     # Nombre y tamano enviado
