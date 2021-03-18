@@ -96,13 +96,13 @@ class ClientThread(Thread):
         self.socket.close()
 
         # Write log
-        log(client_id, self.address, datetime.datetime.now(), status == OK, t1 - t0, fileSelect, fileSize, chunks_sent, bytes_sent)
+        log(client_id, clients, self.address, datetime.datetime.now(), status == OK, t1 - t0, fileSelect, fileSize, chunks_sent, bytes_sent)
 
 
 # Escritura del log
-def log(client_id, addr, now, exitosa, tiempoTotal, fileSelect, fileSize, enviados, bytesEnv):
+def log(client_id, clients, addr, now, exitosa, tiempoTotal, fileSelect, fileSize, enviados, bytesEnv):
     # Crear file de log
-    formatname = "Cliente" + str(client_id) + "-" + now.strftime("%Y-%m-%d-%H-%M-%S") + "-log.txt"
+    formatname = "Cliente" + str(client_id) + "-" + "Conexiones" + str(clients) + "-" + now.strftime("%Y-%m-%d-%H-%M-%S") + "-log.txt"
     pathlib.Path('./LogsServer').mkdir(exist_ok=True)
     f = open("./LogsServer/" + formatname, "x")
     # Nombre y tamano enviado
