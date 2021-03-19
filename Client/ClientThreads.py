@@ -43,11 +43,12 @@ class ClientThread(Thread):
         ready = 'READY'
         if data == ready:
             self.send(ready)
-
+            print('El cliente se conecto con el servidor')
             data = self.receive()
             data = data.split(':')
             idClient = data[0]
             clients = data[1]    
+            print(f'Se le asigno el id {idClient} al cliente')
             data = self.receive()
             data = data.split(':')
             if data[0] == 'FILE_NAME':
@@ -76,6 +77,7 @@ class ClientThread(Thread):
                                 data = self.receive_file()
                                 i += 1
                             t1 = time.time()
+                            self.send(RECIBIDO)
                         data = self.receive().split(':')
                         if data[0] == 'HASH':
                             hashData = data[1]
@@ -141,7 +143,7 @@ FILE_END = 'FILE_END'
 HASH = 'HASH'
 OK = 'OK'
 ERROR = 'ERROR'
-
+RECIBIDO = 'RECEIVED'
 DIRECTORY = 'ArchivosRecibidos'
 
 
@@ -151,7 +153,6 @@ numClients = select()
 
 for i in range(numClients):
     clientSocket = socket(AF_INET, SOCK_STREAM)
-    clientSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     clientSocket.connect((serverName, serverPort))
     newThread = ClientThread(clientSocket)
     newThread.start()
