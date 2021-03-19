@@ -75,8 +75,13 @@ class ClientThread(Thread):
             chunks_sent += 1
             hash_fn.update(f_read)
             f_read = file.read(BUFFER_SIZE)
-        t1 = time.time()  # End timer
         self.send_message(FILE_END)
+
+        # Confirmación de recepcion
+        cli = self.receive_message()
+        if cli != RECEIVED:
+            raise Exception(self.address + " Received " + cli + " instead of RECEIVED")
+        t1 = time.time()  # End timer
         self.print_info("File transferred")
 
         # Send Hash
@@ -126,6 +131,7 @@ FILE_SIZE = 'FILE_SIZE'
 SEP = ':'
 FILE_INIT = 'FILE_INIT'
 FILE_END = 'FILE_END'
+RECEIVED = 'RECEIVED'
 HASH = 'HASH'
 OK = 'OK'
 ERROR = 'ERROR'
