@@ -37,7 +37,7 @@ def log(client_id, now, exitosa, tiempoTotal, fileSelect, fileSize, enviados, by
     return formatname
 
 
-serverName = 'localhost'  # '192.168.226.128' IP de la maquina
+serverName =  input('Dirección IP del Servidor')#'localhost'  # '192.168.226.128' IP de la maquina
 serverPort = 12000
 clientSocket = socket(AF_INET, SOCK_STREAM)
 clientSocket.connect((serverName, serverPort))
