@@ -9,8 +9,10 @@ Crear directorio Files en la ruta /Infracom_Lab_3-1/Server
 Agregar archivos de 100MB y 250MB a transferir.
 
 ## Paso 2
-Modificar el archivo ServerView.py con el nombre de los archivos agregados anteriormente. Donde el primer campo hace referencia al archivo de 100MB 
-y el segundo campo al archivo de 250MB.
+Modificar el archivo ServerView.py con el nombre de los archivos agregados anteriormente. Donde el primer campo en la linea 26 hace referencia al archivo de 100MB 
+y el segundo campo en la linea 29 al archivo de 250MB como se indica en la figura.
+
+![image](https://user-images.githubusercontent.com/60122434/111734832-deaf8600-8848-11eb-85e0-d279485bd0af.png)
 
 ## Paso 3
 
