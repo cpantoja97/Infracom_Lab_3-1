@@ -44,10 +44,12 @@ class ClientThread(Thread):
         if data == ready:
             self.send(ready)
             print('El cliente se conecto con el servidor')
+            
             data = self.receive()
             data = data.split(':')
             idClient = data[0]
             clients = data[1]    
+            
             print(f'Se le asigno el id {idClient} al cliente')
             data = self.receive()
             data = data.split(':')
