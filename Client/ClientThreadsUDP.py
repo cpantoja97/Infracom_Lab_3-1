@@ -43,7 +43,7 @@ class ClientThread(Thread):
         # Recibir info de puerto UDP
         data = self.receive()
         data = data.split(':')
-        udp_port = data[1]
+        udp_port = int(data[1])
 
         # Conexión por UDP
         udp_socket = socket(AF_INET, SOCK_DGRAM)
