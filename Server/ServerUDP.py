@@ -11,12 +11,19 @@ from ServerView import select
 
 # Manage each Client connection
 class ClientThread(Thread):
-    def __init__(self, connection, address):
+    def __init__(self, connection, tcp_address, transfer_port):
         Thread.__init__(self)
-        self.address = address
-        self.socket = connection
+        self.tcp_address = tcp_address
+        self.tcp_socket = connection
         self.ns_socket = socketutils.NetstringSocket(connection)  # Socket Wrapper to use Netstring wrapping technique
-        print("[+] New server socket thread started for " + address[0] + ":" + str(address[1]))
+
+        self.transfer_port = transfer_port
+        self.udp_socket = socket(AF_INET, SOCK_DGRAM)
+        self.udp_socket.bind(('', transfer_port))
+
+        self.udp_address = None
+
+        print("[+] New server socket thread started for " + tcp_address[0] + ":" + str(tcp_address[1]))
 
     # Send a message in text format
     def send_message(self, message):
@@ -24,7 +31,7 @@ class ClientThread(Thread):
 
     # Send file in binary
     def send_file(self, chunk):
-        self.ns_socket.write_ns(chunk)
+        self.udp_socket.sendto(chunk, self.udp_address)
 
     # Receive message in text format
     def receive_message(self):
@@ -32,16 +39,22 @@ class ClientThread(Thread):
 
     # Print a message in console preceding with client identification
     def print_info(self, info):
-        print("[" + self.address[0] + ":" + str(self.address[1]) + "] " + info)
+        print("[" + self.tcp_address[0] + ":" + str(self.tcp_address[1]) + "] " + info)
 
     def run(self):
         global numReady
 
-        # Client confirmation
+        # Send client UDP port
+        self.send_message(TRANSFER_PORT + SEP + self.transfer_port)
+
+        # Receive hello in udp socket
+        message, self.udp_address = self.udp_socket.recvfrom(BUFFER_SIZE)
+
+        # Client ready confirmation
         self.send_message(READY)
         cli = self.receive_message()
         if cli != READY:
-            raise Exception(self.address + " Received " + cli + " instead of READY")
+            raise Exception(self.tcp_address + " Received " + cli + " instead of READY")
         self.print_info("Client ready")
 
         # Increase number of ready clients
@@ -80,7 +93,7 @@ class ClientThread(Thread):
         # Confirmación de recepcion
         cli = self.receive_message()
         if cli != RECEIVED:
-            raise Exception(self.address + " Received " + cli + " instead of RECEIVED")
+            raise Exception(self.tcp_address + " Received " + cli + " instead of RECEIVED")
         t1 = time.time()  # End timer
         self.print_info("File transferred")
 
@@ -98,10 +111,10 @@ class ClientThread(Thread):
         self.print_info("Client received " + str(chunks_received) + " packets")
 
         # Close socket
-        self.socket.close()
+        self.tcp_socket.close()
 
         # Write log
-        log(client_id, clients, self.address, datetime.datetime.now(), status == OK, t1 - t0, fileSelect, fileSize, chunks_sent, bytes_sent)
+        log(client_id, clients, self.tcp_address, datetime.datetime.now(), status == OK, t1 - t0, fileSelect, fileSize, chunks_sent, bytes_sent)
 
 
 # Escritura del log
@@ -126,6 +139,7 @@ def log(client_id, clients, addr, now, exitosa, tiempoTotal, fileSelect, fileSiz
 
 # PROTOCOL COMMANDS IN CASE THEY ARE CHANGED
 READY = 'READY'
+TRANSFER_PORT = 'TRANSFER_PORT'
 FILE_NAME = 'FILE_NAME'
 FILE_SIZE = 'FILE_SIZE'
 SEP = ':'
@@ -153,6 +167,8 @@ serverSocket.bind(('', SERVER_PORT))
 
 threads = []
 
+transfer_port_count = SERVER_PORT
+
 # Corre el metodo del view para obtener los datos
 clients, fileSelect = select()
 fileSize = pathlib.Path('./' + DIRECTORY + '/' + fileSelect).stat().st_size
@@ -162,7 +178,9 @@ while len(threads) < clients:
 
     connectionSocket, address = serverSocket.accept()
 
-    newThread = ClientThread(connectionSocket, address)
+    transfer_port_count += 1
+
+    newThread = ClientThread(connectionSocket, address, transfer_port_count)
     newThread.start()
 
     threads.append(newThread)
