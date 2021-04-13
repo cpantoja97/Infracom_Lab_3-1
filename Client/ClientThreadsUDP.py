@@ -21,10 +21,11 @@ def select():
     return clients
 
 class ClientThread(Thread):
-    def __init__(self,connection):
+    def __init__(self, connection):
         Thread.__init__(self)
         self.socket = connection
         self.ns_socket = socketutils.NetstringSocket(connection)
+        self.udp_socket = socket(AF_INET, SOCK_DGRAM)
 
     def receive(self):
         return self.ns_socket.read_ns().decode()
@@ -44,11 +45,11 @@ class ClientThread(Thread):
         data = self.receive()
         data = data.split(':')
         udp_port = int(data[1])
+        print("Recibió puerto: " + str(udp_port))
 
         # Conexión por UDP
-        udp_socket = socket(AF_INET, SOCK_DGRAM)
         # TODO: esto puede fallar si nunca llega, entonces hay que colocar un loop con timeout
-        udp_socket.sendto('hola'.encode(), (serverName, udp_port))
+        self.udp_socket.sendto('hola'.encode(), (serverName, udp_port))
 
         # Recibir READY
         data = self.receive()
