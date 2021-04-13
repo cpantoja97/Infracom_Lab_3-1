@@ -45,7 +45,7 @@ class ClientThread(Thread):
         global numReady
 
         # Send client UDP port
-        self.send_message(TRANSFER_PORT + SEP + self.transfer_port)
+        self.send_message(TRANSFER_PORT + SEP + str(self.transfer_port))
 
         # Receive hello in udp socket
         message, self.udp_address = self.udp_socket.recvfrom(BUFFER_SIZE)
