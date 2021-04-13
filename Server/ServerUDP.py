@@ -46,9 +46,11 @@ class ClientThread(Thread):
 
         # Send client UDP port
         self.send_message(TRANSFER_PORT + SEP + str(self.transfer_port))
+        self.print_info("Sent port " + str(self.transfer_port))
 
         # Receive hello in udp socket
         message, self.udp_address = self.udp_socket.recvfrom(BUFFER_SIZE)
+        self.print_info("Received UDP message")
 
         # Client ready confirmation
         self.send_message(READY)
@@ -77,8 +79,10 @@ class ClientThread(Thread):
         # Send file info
         self.send_message(FILE_NAME + SEP + fileSelect)
         self.send_message(FILE_SIZE + SEP + str(fileSize))
+        self.print_info("File info sent")
 
         # SEND FILE...
+        self.print_info("About to start sending file")
         self.send_message(FILE_INIT)
         f_read = file.read(BUFFER_SIZE)
         t0 = time.time()  # Start timer
