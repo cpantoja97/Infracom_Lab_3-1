@@ -92,7 +92,7 @@ class ClientThread(Thread):
             chunks_sent += 1
             hash_fn.update(f_read)
             f_read = file.read(BUFFER_SIZE)
-        self.send_message(FILE_END)
+        #self.send_message(FILE_END)
 
         # Confirmación de recepcion
         cli = self.receive_message()

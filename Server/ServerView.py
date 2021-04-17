@@ -23,7 +23,7 @@ def select():
             print("2- Archivo de 250 MB")
             numFile = int(input())
             if numFile == 1:
-                fileSelect = "base.xlsx"  # Verificar nombre archivo
+                fileSelect = "base.png"  # Verificar nombre archivo
                 ready = True
             elif numFile == 2:
                 fileSelect = "Capitulo.pptx"  # Verificar nombre archivo

@@ -26,6 +26,7 @@ class ClientThread(Thread):
         self.socket = connection
         self.ns_socket = socketutils.NetstringSocket(connection)
         self.udp_socket = socket(AF_INET, SOCK_DGRAM)
+        self.udp_socket.settimeout(2)
 
     def receive(self):
         return self.ns_socket.read_ns().decode()
@@ -86,12 +87,19 @@ class ClientThread(Thread):
                             t0 = time.time()
                             data = self.receive_file()
                             # TODO: encontrar como parar
-                            while data and data != 'FILE_END'.encode():
-                                bytesRecibidos += len(data)
-                                fileSend.write(data)
-                                hasher.update(data)
-                                data = self.receive_file()
-                                i += 1
+                            try:
+                                while data:
+                                    bytesRecibidos += len(data)
+                                    fileSend.write(data)
+                                    hasher.update(data)
+                                    data = self.receive_file()
+                                    i += 1
+                            except timeout:
+                                self.udp_socket.close()
+                            
+                            #data = self.receive()
+                            #if data != 'FILE_END'.encode():
+                            #    raise Exception(self.tcp_address + " Received " + cli + " instead of FILE_END")
                             t1 = time.time()
                             self.send(RECIBIDO)
                         data = self.receive().split(':')
