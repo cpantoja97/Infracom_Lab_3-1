@@ -32,7 +32,7 @@ class ClientThread(Thread):
 
     def receive_file(self):
         # TODO: charlarse el buffer size con el servidor por si las flies
-        return self.udp_socket.recvfrom(4096)
+        return self.udp_socket.recvfrom(4096)[0]
 
     def send(self, message):
         encoded_message = message.encode()
@@ -85,10 +85,11 @@ class ClientThread(Thread):
                             i = 0
                             t0 = time.time()
                             data = self.receive_file()
+                            # TODO: encontrar como parar
                             while data and data != 'FILE_END'.encode():
                                 bytesRecibidos += len(data)
-                                hasher.update(data)
                                 fileSend.write(data)
+                                hasher.update(data)
                                 data = self.receive_file()
                                 i += 1
                             t1 = time.time()
@@ -96,7 +97,6 @@ class ClientThread(Thread):
                         data = self.receive().split(':')
                         if data[0] == 'HASH':
                             hashData = data[1]
-
                             hashFile = hasher.hexdigest()
                             status = ''
                             if hashFile == hashData:
