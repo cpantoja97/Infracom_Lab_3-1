@@ -44,34 +44,14 @@ class ClientThread(Thread):
     def run(self):
         global numReady
 
+        # Send file info
+        self.send_message(FILE_NAME + SEP + fileSelect)
+        self.send_message(FILE_SIZE + SEP + str(fileSize))
+        self.print_info("File info sent")
+
         # Send client UDP port
         self.send_message(TRANSFER_PORT + SEP + str(self.transfer_port))
         self.print_info("Sent port " + str(self.transfer_port))
-
-        # Receive hello in udp socket
-        handshake = False
-        self.udp_socket.settimeout(3)
-        while not handshake:
-            try:
-                print("receiving ready")
-                message, self.udp_address = self.udp_socket.recvfrom(4096)
-                message = message.decode()
-                self.print_info("Received UDP message: " + message)
-                if message == READY:
-                    print("received ready")
-                    self.send_message(READY)
-                    print("sent ready")
-                    handshake = True
-            except timeout:
-                print("timedout")
-                continue
-
-        # Client ready confirmation
-        self.send_message(READY)
-        cli = self.receive_message()
-        if cli != READY:
-            raise Exception(self.tcp_address + " Received " + cli + " instead of READY")
-        self.print_info("Client ready")
 
         # Increase number of ready clients
         numReadyLock.acquire()
@@ -82,6 +62,23 @@ class ClientThread(Thread):
         # Inform client of his number and total clients
         self.send_message(str(client_id) + SEP + str(clients))
 
+        # Handshake in UDP socket
+        handshake = False
+        self.udp_socket.settimeout(3)
+        while not handshake:
+            try:
+                # Receives READY confirmation message
+                message, self.udp_address = self.udp_socket.recvfrom(4096)
+                message = message.decode()
+                self.print_info("Received UDP handshake: " + message)
+                if message == READY:
+                    self.send_message(READY)
+                    handshake = True
+            except timeout:
+                continue
+
+        self.print_info("Client ready")
+
         # Actively wait until all clients are ready
         while numReady < clients:
             continue
@@ -89,11 +86,6 @@ class ClientThread(Thread):
         file = open('../' + DIRECTORY + '/' + fileSelect, "rb")
         bytes_sent = 0
         chunks_sent = 0
-
-        # Send file info
-        self.send_message(FILE_NAME + SEP + fileSelect)
-        self.send_message(FILE_SIZE + SEP + str(fileSize))
-        self.print_info("File info sent")
 
         # SEND FILE...
         self.print_info("About to start sending file")
@@ -106,7 +98,6 @@ class ClientThread(Thread):
             chunks_sent += 1
             hash_fn.update(f_read)
             f_read = file.read(BUFFER_SIZE)
-        #self.send_message(FILE_END)
 
         # Confirmación de recepcion
         cli = self.receive_message()
