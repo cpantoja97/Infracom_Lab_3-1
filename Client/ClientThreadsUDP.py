@@ -32,7 +32,6 @@ class ClientThread(Thread):
         return self.ns_socket.read_ns().decode()
 
     def receive_file(self):
-        # TODO: charlarse el buffer size con el servidor por si las flies
         return self.udp_socket.recvfrom(4096)[0]
 
     def send(self, message):
@@ -50,7 +49,11 @@ class ClientThread(Thread):
 
         # Conexión por UDP
         # TODO: esto puede fallar si nunca llega, entonces hay que colocar un loop con timeout
-        self.udp_socket.sendto('hola'.encode(), (serverName, udp_port))
+        while ready:
+            try:
+                self.udp_socket.sendto('hola'.encode(), (serverName, udp_port))
+            except
+
 
         # Recibir READY
         data = self.receive()
@@ -86,7 +89,6 @@ class ClientThread(Thread):
                             i = 0
                             t0 = time.time()
                             data = self.receive_file()
-                            # TODO: encontrar como parar
                             try:
                                 while data:
                                     bytesRecibidos += len(data)
