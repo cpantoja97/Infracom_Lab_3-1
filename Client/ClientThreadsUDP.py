@@ -42,6 +42,23 @@ class ClientThread(Thread):
     def run(self):
         conn = self.ns_socket
 
+        data = self.receive()
+        data = data.split(':')
+        if data[0] != 'FILE_NAME':
+            raise Exception(f'ERROR: se recibio {data[0]} y se esperaba "FILE_NAME"')
+
+        fileName = data[1]
+        print('Nombre del archivo:', fileName)
+        
+        data = self.receive()
+        data = data.split(':')
+
+        if data[0] != 'FILE_SIZE':
+            raise Exception(f'ERROR: se recibio {data[0]} y se esperaba "FILE_SIZE"')
+
+        fileSize = data[1]
+        print('Tamaño del archivo:', fileSize)
+
         # Recibir info de puerto UDP
         data = self.receive()
         data = data.split(':')
@@ -51,95 +68,72 @@ class ClientThread(Thread):
         # Conexión por UDP
         handshake = False
         while not handshake:
-            self.udp_socket.sendto('READY'.encode(), (serverName, udp_port))
-            print("Sent Ready")
+            self.udp_socket.sendto('HELLO'.encode(), (serverName, udp_port))
             try:
-                print("Receiving ready")
                 received = self.receive()
                 if received == 'READY':
-                    print("Received ready")
                     handshake = True
             except timeout:
-                print("timedout")
                 continue
 
-        # Recibir READY
+
+        print('El cliente se conecto con el servidor')
+            
         data = self.receive()
-        ready = 'READY'
-        if data == ready:
-            self.send(ready)
-            print('El cliente se conecto con el servidor')
-            
-            data = self.receive()
-            data = data.split(':')
-            idClient = data[0]
-            clients = data[1]    
-            
-            print(f'Se le asigno el id {idClient} al cliente')
-            data = self.receive()
-            data = data.split(':')
-            if data[0] == 'FILE_NAME':
-                fileName = data[1]
-                print('Nombre del archivo:', fileName)
-                
-                data = self.receive()
-                data = data.split(':')
+        data = data.split(':')
+        idClient = data[0]
+        clients = data[1]    
+        
+        print(f'Se le asigno el id {idClient} al cliente')
 
-                if data[0] == 'FILE_SIZE':
-                    fileSize = data[1]
-                    print('Tamaño del archivo:', fileSize)
-                    hasher = hashlib.new('sha256')
-                    data = self.receive()
-                    if data == 'FILE_INIT':
-                        bytesRecibidos = 0
-                        pathlib.Path('../ArchivosRecibidos').mkdir(exist_ok=True)
-                        with open(f'../ArchivosRecibidos/Cliente{idClient}-Prueba-{clients}-{fileName}', 'wb') as fileSend:
-                            i = 0
-                            t0 = time.time()
-                            data = self.receive_file()
-                            try:
-                                while data:
-                                    bytesRecibidos += len(data)
-                                    fileSend.write(data)
-                                    hasher.update(data)
-                                    data = self.receive_file()
-                                    i += 1
-                            except timeout:
-                                self.udp_socket.close()
-                            
-                            #data = self.receive()
-                            #if data != 'FILE_END'.encode():
-                            #    raise Exception(self.tcp_address + " Received " + cli + " instead of FILE_END")
-                            t1 = time.time()
-                            self.send(RECIBIDO)
-                        data = self.receive().split(':')
-                        if data[0] == 'HASH':
-                            hashData = data[1]
-                            hashFile = hasher.hexdigest()
-                            status = ''
-                            if hashFile == hashData:
-                                self.send('OK')
-                                status = 'OK'
-                                print(f'Bytes recibidos: {bytesRecibidos}')
-                                print(f'Descarga Exitosa del cliente {idClient}')
-                            else:
-                                print(f'Hash recibido del servidor: {hashData} \n Hash calculado del archivo: {hashFile}')
-                                self.send('ERROR')
-                                status = 'ERROR'
-                        else:
-                            print(f'ERROR: se recibio {data[0]} y se esperaba "HASH"')
+        data = self.send(READY)
+        print('Estado del cliente:', READY)
+          
+        
+        hasher = hashlib.new('sha256')
+        
+        data = self.receive()
+        if data != 'FILE_INIT':
+            recibido = data.decode()
+            raise Exception(f'ERROR: se recibio {recibido} y se esperaba "FILE_INIT"')
 
-                        self.send(str(bytesRecibidos) + ":" + str(i))
-                    else:
-                        recibido = data.decode()
-                        print(f'ERROR: se recibio {recibido} y se esperaba "FILE_INIT"')
-                else:
-                 print(f'ERROR: se recibio {data[0]} y se esperaba "FILE_SIZE"')   
+        bytesRecibidos = 0
+        pathlib.Path('./ArchivosRecibidos').mkdir(exist_ok=True)
+        with open(f'./ArchivosRecibidos/Cliente{idClient}-Prueba-{clients}-{fileName}', 'wb') as fileSend:
+            i = 0
+            t0 = time.time()
+            data = self.receive_file()
+            try:
+                while data:
+                    bytesRecibidos += len(data)
+                    fileSend.write(data)
+                    hasher.update(data)
+                    data = self.receive_file()
+                    i += 1
+            except timeout:
+                self.udp_socket.close()
+            
+            t1 = time.time()
+            self.send(RECIBIDO)
+        data = self.receive().split(':')
+        if data[0] == 'HASH':
+            hashData = data[1]
+            hashFile = hasher.hexdigest()
+            status = ''
+            if hashFile == hashData:
+                self.send('OK')
+                status = 'OK'
+                print(f'Bytes recibidos: {bytesRecibidos}')
+                print(f'Descarga Exitosa del cliente {idClient}')
             else:
-                print(f'ERROR: se recibio {data[0]} y se esperaba "FILE_NAME"')
+                print(f'Hash recibido del servidor: {hashData} \n Hash calculado del archivo: {hashFile}')
+                self.send('ERROR')
+                status = 'ERROR'
         else:
-            print(f'ERROR: se recibio {data} y se esperaba READY')
+            print(f'ERROR: se recibio {data[0]} y se esperaba "HASH"')
 
+        self.send(str(bytesRecibidos) + ":" + str(i))
+            
         self.socket.close()
 
         log(idClient, clients, datetime.datetime.now(), status == OK, t1 - t0, fileName, fileSize, i, bytesRecibidos)
@@ -149,8 +143,8 @@ class ClientThread(Thread):
 def log(client_id, clients, now, exitosa, tiempoTotal, fileSelect, fileSize, enviados, bytesEnv):
     # Crear file de log
     formatname = "Cliente" + client_id + "-" + "Conexiones" + clients + "-" + now.strftime("%Y-%m-%d-%H-%M-%S") + "-log.txt"
-    pathlib.Path('../LogsClient').mkdir(exist_ok=True)
-    f = open("../LogsClient/" + formatname, "x")
+    pathlib.Path('./LogsClient').mkdir(exist_ok=True)
+    f = open("./LogsClient/" + formatname, "x")
     # Nombre y tamano enviado
     f.write("El nombre del archivo recibido es " + fileSelect + " y su tamaño es " + str(fileSize) + " B \n")
     # Info transferencia
