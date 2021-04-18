@@ -57,7 +57,7 @@ class ClientThread(Thread):
         while numReady < clients:
             continue
         hash_fn = hashlib.sha256()
-        file = open('./' + DIRECTORY + '/' + fileSelect, "rb")
+        file = open('../' + DIRECTORY + '/' + fileSelect, "rb")
         bytes_sent = 0
         chunks_sent = 0
 

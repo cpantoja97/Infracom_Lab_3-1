@@ -24,6 +24,7 @@ class ClientThread(Thread):
     def __init__(self, connection):
         Thread.__init__(self)
         self.socket = connection
+        self.socket.settimeout(2)
         self.ns_socket = socketutils.NetstringSocket(connection)
         self.udp_socket = socket(AF_INET, SOCK_DGRAM)
         self.udp_socket.settimeout(2)
@@ -48,12 +49,19 @@ class ClientThread(Thread):
         print("Recibió puerto: " + str(udp_port))
 
         # Conexión por UDP
-        # TODO: esto puede fallar si nunca llega, entonces hay que colocar un loop con timeout
-        while ready:
+        handshake = False
+        while not handshake:
+            self.udp_socket.sendto('READY'.encode(), (serverName, udp_port))
+            print("Sent Ready")
             try:
-                self.udp_socket.sendto('hola'.encode(), (serverName, udp_port))
-            except
-
+                print("Receiving ready")
+                received = self.receive()
+                if received == 'READY':
+                    print("Received ready")
+                    handshake = True
+            except timeout:
+                print("timedout")
+                continue
 
         # Recibir READY
         data = self.receive()
@@ -84,8 +92,8 @@ class ClientThread(Thread):
                     data = self.receive()
                     if data == 'FILE_INIT':
                         bytesRecibidos = 0
-                        pathlib.Path('./ArchivosRecibidos').mkdir(exist_ok=True)
-                        with open(f'./ArchivosRecibidos/Cliente{idClient}-Prueba-{clients}-{fileName}', 'wb') as fileSend:
+                        pathlib.Path('../ArchivosRecibidos').mkdir(exist_ok=True)
+                        with open(f'../ArchivosRecibidos/Cliente{idClient}-Prueba-{clients}-{fileName}', 'wb') as fileSend:
                             i = 0
                             t0 = time.time()
                             data = self.receive_file()
@@ -141,8 +149,8 @@ class ClientThread(Thread):
 def log(client_id, clients, now, exitosa, tiempoTotal, fileSelect, fileSize, enviados, bytesEnv):
     # Crear file de log
     formatname = "Cliente" + client_id + "-" + "Conexiones" + clients + "-" + now.strftime("%Y-%m-%d-%H-%M-%S") + "-log.txt"
-    pathlib.Path('./LogsClient').mkdir(exist_ok=True)
-    f = open("./LogsClient/" + formatname, "x")
+    pathlib.Path('../LogsClient').mkdir(exist_ok=True)
+    f = open("../LogsClient/" + formatname, "x")
     # Nombre y tamano enviado
     f.write("El nombre del archivo recibido es " + fileSelect + " y su tamaño es " + str(fileSize) + " B \n")
     # Info transferencia
