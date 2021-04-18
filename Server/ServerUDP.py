@@ -53,15 +53,6 @@ class ClientThread(Thread):
         self.send_message(TRANSFER_PORT + SEP + str(self.transfer_port))
         self.print_info("Sent port " + str(self.transfer_port))
 
-        # Increase number of ready clients
-        numReadyLock.acquire()
-        numReady += 1
-        client_id = numReady
-        numReadyLock.release()
-
-        # Inform client of his number and total clients
-        self.send_message(str(client_id) + SEP + str(clients))
-
         # Handshake in UDP socket
         handshake = False
         self.udp_socket.settimeout(3)
@@ -71,12 +62,25 @@ class ClientThread(Thread):
                 message, self.udp_address = self.udp_socket.recvfrom(4096)
                 message = message.decode()
                 self.print_info("Received UDP handshake: " + message)
-                if message == READY:
+                if message == HELLO:
                     self.send_message(READY)
                     handshake = True
             except timeout:
                 continue
 
+        # Increase number of ready clients
+        numReadyLock.acquire()
+        numReady += 1
+        client_id = numReady
+        numReadyLock.release()
+
+        # Inform client of his number and total clients
+        self.send_message(str(client_id) + SEP + str(clients))
+
+        # Client ready confirmation
+        cli = self.receive_message()
+        if cli != READY:
+            raise Exception(self.tcp_address + " Received " + cli + " instead of READY")
         self.print_info("Client ready")
 
         # Actively wait until all clients are ready
@@ -147,6 +151,7 @@ def log(client_id, clients, addr, now, exitosa, tiempoTotal, fileSelect, fileSiz
 
 
 # PROTOCOL COMMANDS IN CASE THEY ARE CHANGED
+HELLO = 'HELLO'
 READY = 'READY'
 TRANSFER_PORT = 'TRANSFER_PORT'
 FILE_NAME = 'FILE_NAME'
