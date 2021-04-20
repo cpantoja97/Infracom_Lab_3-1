@@ -1,0 +1,6 @@
+El nombre del archivo enviado es base.xlsx y su tamaño es 110453375 B 
+El cliente al que se realiza la transferencia es ('127.0.0.1', 64651)
+La entrega del archivo fue no exitosa
+El tiempo total de transferencia, en segundos, fue 2.584908962249756
+El numero de paquetes enviados es 26967
+El valor total en bytes enviado es 110453375

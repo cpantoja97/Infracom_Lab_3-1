@@ -87,7 +87,7 @@ class ClientThread(Thread):
         while numReady < clients:
             continue
         hash_fn = hashlib.sha256()
-        file = open('../' + DIRECTORY + '/' + fileSelect, "rb")
+        file = open(DIRECTORY + '/' + fileSelect, "rb")
         bytes_sent = 0
         chunks_sent = 0
 
@@ -134,8 +134,8 @@ class ClientThread(Thread):
 def log(client_id, clients, addr, now, exitosa, tiempoTotal, fileSelect, fileSize, enviados, bytesEnv):
     # Crear file de log
     formatname = "Cliente" + str(client_id) + "-" + "Conexiones" + str(clients) + "-" + now.strftime("%Y-%m-%d-%H-%M-%S") + "-log.txt"
-    pathlib.Path('../LogsServer').mkdir(exist_ok=True)
-    f = open("../LogsServer/" + formatname, "x")
+    pathlib.Path('LogsServer').mkdir(exist_ok=True)
+    f = open("LogsServer/" + formatname, "x")
     # Nombre y tamano enviado
     f.write("El nombre del archivo enviado es " + fileSelect + " y su tamaño es " + str(fileSize) + " B \n")
     # Cliente
@@ -185,7 +185,7 @@ transfer_port_count = SERVER_PORT
 
 # Corre el metodo del view para obtener los datos
 clients, fileSelect = select()
-fileSize = pathlib.Path('../' + DIRECTORY + '/' + fileSelect).stat().st_size
+fileSize = pathlib.Path( DIRECTORY + '/' + fileSelect).stat().st_size
 
 while len(threads) < clients:
     serverSocket.listen(clients)
