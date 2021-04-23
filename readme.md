@@ -16,7 +16,7 @@ y el segundo campo en la linea 29 al archivo de 250MB como se indica en la figur
 
 ## Paso 3
 
-Ejecutar el codigo ServerDUP.py que se encuentra en la ruta /Infracom_Lab_3-1/Server en la maquina ubuntu que se va a utilizar para el servidor.
+Ejecutar el codigo ServerUDP.py que se encuentra en la ruta /Infracom_Lab_3-1/Server en la maquina ubuntu que se va a utilizar para el servidor.
 Seguido de esto, el programa va a solicitar que ingrese por consola un numero entre 1 y 25 para indicar el numero de conexiones simultaneas con clientes que se van a recibir. 
 Una vez confirmado el numero de conexiones, se solicita por consola ingresar el numero 1 o el numero 2, para transferir el archivo de 100MB o de 250MB respectivamente.
 
